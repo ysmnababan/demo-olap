@@ -29,7 +29,7 @@ services:
     container_name: kafka-connect
     depends_on:
       - redpanda     # Ensure Redpanda starts first
-      - postgres     # Ensure PostgreSQL starts first
+      # - malut_clone     # Ensure PostgreSQL starts first
     restart: always  # Automatically restart if crashed
     ports:
       - "8083:8083"  # Expose Kafka Connect REST API

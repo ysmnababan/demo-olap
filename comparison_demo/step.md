@@ -1,9 +1,10 @@
+# POSTGRES
 
-# dump the source
+## dump the source
 pg_dump -U your_user -h your_host -Fc your_database > db.dump
 pg_dump -U palm -h 206.189.144.36 -Fc malut > db.dump
 
-# create the container
+## create the container
 docker run -d \
   --name malut_clone \
   -e POSTGRES_USER=admin \
@@ -12,34 +13,29 @@ docker run -d \
   -p 5432:5432 \
   postgres:16
 
-# configure the wal
+## configure the wal
 ALTER SYSTEM SET wal_level = 'logical';
 ALTER SYSTEM SET max_replication_slots = 4;
 ALTER SYSTEM SET max_wal_senders = 4;
 
-# create the role
+## create the role
 docker exec -it malut_clone psql -U admin -d palm
 CREATE ROLE developer LOGIN;
 CREATE ROLE postgres LOGIN;
 CREATE ROLE palm LOGIN;
 
-# copy and restore the db
+## copy and restore the db
 docker cp ./db/db.dump malut_clone:/db.dump
 docker exec -it malut_clone pg_restore -U admin -d palm /db.dump
 
-# create network, and connect to the postgres
+## create network, and connect to the postgres
 docker network create olap_network
 docker network connect <network_name> <container_name_or_id>
 docker network connect olap_network malut_clone
-----
-# db query example => as a attendance_fact
+
+
+**db query example => as a attendance_fact**
 ```sql
-select * from attendances a;
-
-select * from users u;
-
-select * from shift_schedule ss ;
-
 select 
 	a.id as attendance_id, 
 	a.check_in , 
@@ -74,3 +70,25 @@ left join master_position mp on mp.id =up.position_id
 left join master_position_type mpt on mpt.id = mp.position_type_id 
 where mpt.jenis_jabatan is null;
 ```
+## check user privileges
+required privilege for `DEBEZIUM`:
+  REPLICATION (for reading WAL)
+  SELECT on all tables in the publication
+
+- grant with this
+ALTER USER admin WITH REPLICATION;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO admin;
+
+## create publication for each table
+-- List existing publications
+SELECT * FROM pg_publication;
+
+-- If missing, create it (change this according to your usage)
+CREATE PUBLICATION demo_pub FOR TABLE
+    attendances, shift_schedule, shift_rules, users,
+    master_unit_organization, user_grade, master_grade,
+    user_position, master_position, master_position_type;
+
+
+---
+# DEBEZIUM
