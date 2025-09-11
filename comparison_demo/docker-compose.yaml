@@ -1,0 +1,81 @@
+services:
+
+  redpanda:
+    image: redpandadata/redpanda:v25.1.9  # Kafka-compatible streaming platform
+    container_name: redpanda
+    ports:
+      - "9092:9092"   # External access (OUTSIDE://)
+      - "29092:29092" # Internal access (PLAINTEXT://)
+    command:
+      - redpanda
+      - start
+      - --overprovisioned        # Simplifies running on dev machines
+      - --smp
+      - "1"                      # Use 1 CPU core
+      - --memory
+      - "1G"                     # Limit memory to 1 GB
+      - --reserve-memory
+      - "0M"                     # No reserved memory
+      - --node-id
+      - "0"                      # Cluster node ID
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092  # Bind to all interfaces
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://redpanda:9092  # Used by Kafka clients inside/outside Docker
+      - --check=false            # Skip filesystem check for demo purposes
+
+  kafka-connect:
+    image: debezium/connect:2.7.3.Final  # Kafka Connect image with Debezium preinstalled
+    container_name: kafka-connect
+    depends_on:
+      - redpanda     # Ensure Redpanda starts first
+      - postgres     # Ensure PostgreSQL starts first
+    restart: always  # Automatically restart if crashed
+    ports:
+      - "8083:8083"  # Expose Kafka Connect REST API
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:9092       # Connect to Redpanda as Kafka broker
+      REST_ADVERTISED_HOST_NAME: kafka-connect  # Used by Kafka Connect REST
+      GROUP_ID: mysql-deb-kc-rp              # Group ID for connector cluster coordination
+      CONFIG_STORAGE_TOPIC: redpanda.configs # Topic to store connector configs
+      OFFSET_STORAGE_TOPIC: redpanda.offset  # Topic to store connector offsets
+      STATUS_STORAGE_TOPIC: redpanda.status  # Topic to store connector status
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1" # Required for topic creation (demo only)
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter  # Basic string key format
+      VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter # Basic string value format
+      PLUGIN_PATH: /data/connect-jars  # Where to load additional connector plugins (optional)
+    volumes:
+      - ./data:/data/connect-jars       # Mount local directory for plugins or JARs
+  risingwave:
+    image: risingwavelabs/risingwave:v2.5.0
+    container_name: risingwave
+    depends_on:
+      - redpanda
+      - clickhouse
+    ports:
+      - "4566:4566"    # PostgreSQL‑wire interface (CLI / Grafana, etc.)
+      - "5691:5691"    # REST/gRPC
+    environment:
+      # Optional tuning flags
+      RW_LOG_FILTER: "info,executor=warn"
+      # If you're using ClickHouse upsert sink or schema registry, might need premium license
+      # RW_LICENSE_KEY: <your-license-key>
+    healthcheck:
+      test: ["CMD", "risingwave-ctl", "health", "meta"]
+      interval: 5s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP (used by RW clickhouse sink)
+      - "9000:9000"  # Native client
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=admin
+volumes:
+  clickhouse_data:
