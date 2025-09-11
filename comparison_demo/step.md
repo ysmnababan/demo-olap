@@ -115,6 +115,15 @@ curl http://localhost:8083/connectors/postgres-connector/status
 
 {"name":"postgres-connector","connector":{"state":"RUNNING","worker_id":"172.26.0.4:8083"},"tasks":[{"id":0,"state":"RUNNING","worker_id":"172.26.0.4:8083"}],"type":"source"}
 ```
+-- you can also restart the connector
+curl -X POST http://localhost:8083/connectors/postgres-connector/restart
 
+- debezium create this prefix as topic
+<topic.prefix>.<schema>.<table>
 
-# 
+# REDPANDA
+- check the topic list
+docker exec -it redpanda rpk topic list
+- consume topic
+docker exec -it redpanda rpk topic consume dbserver1.public.attendances
+

@@ -24,6 +24,8 @@
         "schema.history.internal.kafka.bootstrap.servers": "redpanda:9092",
         "schema.history.internal.kafka.topic": "schema-changes.demo",
 
-        "topic.prefix": "dbserver1" 
+        "topic.prefix": "dbserver1" ,
+        "snapshot.mode": "initial",
+        "include.schema.changes": "true"
     }
 }
