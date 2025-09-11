@@ -92,3 +92,29 @@ CREATE PUBLICATION demo_pub FOR TABLE
 
 ---
 # DEBEZIUM
+
+## create the debezium config
+- adjust the `database.hostname` to your db host
+- adjust the db credential
+- dont forget to add the `topic.prefix`
+look at [here](./debezium_config.md) for more detail
+
+## Deploy the connector to Kafka Connect
+- make sure the kafka can connect to application
+```sh
+curl -X POST -H "Content-Type: application/json" \
+     --data @register-postgres-connector.json \
+     http://localhost:8083/connectors
+```
+- if you want to edit the connector after deploying it first,
+  you have to do different update procedure like [this](/cdc_demo/README.md#update-config-if-needed)
+
+- verify the connector status
+```sh
+curl http://localhost:8083/connectors/postgres-connector/status
+
+{"name":"postgres-connector","connector":{"state":"RUNNING","worker_id":"172.26.0.4:8083"},"tasks":[{"id":0,"state":"RUNNING","worker_id":"172.26.0.4:8083"}],"type":"source"}
+```
+
+
+# 
