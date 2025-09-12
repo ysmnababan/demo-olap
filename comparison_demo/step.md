@@ -225,7 +225,7 @@ Then create the table:
 
 ```sql
 -- In ClickHouse
-CREATE TABLE attendance_fact (
+CREATE TABLE IF NOT EXISTS attendance_fact (
     attendance_id       BIGINT,
     check_in            DateTime,
     check_out           DateTime,
