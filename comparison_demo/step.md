@@ -141,7 +141,10 @@ psql -h 127.0.0.1 -p 4566 -U root -d dev -f sources.sql
 - generaly, `not null` field is only for the primary key field.
 
 - create materialized view 
-```sql
+
+```bash
+psql -h localhost -p 4566 -d dev -U root
+# run this
 CREATE MATERIALIZED VIEW attendance_fact AS
 SELECT 
     a.id AS attendance_id, 
@@ -180,3 +183,79 @@ LEFT JOIN user_position_source up ON up.user_id = u.id
 LEFT JOIN master_position_source mp ON mp.id = up.position_id
 LEFT JOIN master_position_type_source mpt ON mpt.id = mp.position_type_id;
 ```
+
+Create Sink in RisingWave To Clickhouse
+```sql
+CREATE SINK sink_attendance_fact
+FROM attendance_fact
+WITH (
+  connector = 'clickhouse',
+  type = 'upsert',
+  "clickhouse.url" = 'http://clickhouse:8123',
+  "clickhouse.database" = 'default',
+  "clickhouse.table" = 'attendance_fact',
+  "clickhouse.user" = 'default',
+  "clickhouse.password" = 'admin',
+  "primary_key" = 'id',
+  "clickhouse.delete.column" = 'is_deleted'
+);
+
+
+```
+- you can done all the above command by creating a init sql file to be run
+  when starting a container
+
+# CLICKHOUSE
+
+- ClickHouse is append-only by design. It doesn’t handle row-level deletes directly in real time. That’s why RisingWave’s sink connector needs a workaround:
+- If you need delete capability in clickhouse, add new rows (i.e. `is_deleted`)
+  into the clickhouse table. You dont have to add this for risingwave MV table.
+  The deletion will be triggered if any of the related table for the MV is deleted.
+  In this example, if `users` row is deleted, because it need to be joined with the
+  `attendance` table, the entire row with the particular user is deleted in 
+  clickhouse (or to be precise, marked as deleted)
+
+Enter ClickHouse client:
+
+```bash
+docker exec -it clickhouse clickhouse-client
+```
+
+Then create the table:
+
+```sql
+-- In ClickHouse
+CREATE TABLE attendance_fact (
+    attendance_id       BIGINT,
+    check_in            DateTime,
+    check_out           DateTime,
+    company_id          BIGINT,
+    schedule_id         BIGINT,
+    schedule_date       Date,
+    clock_in_time       String,
+    clock_out_time      String,
+    shift_rule_id       BIGINT,
+    shift_rule_name     String,
+    location_address    String,
+    location_name       String,
+    sr_cit              String,
+    sr_cot              String,
+    user_id             BIGINT,
+    nip                 String,
+    fullname            String,
+    unor_id             BIGINT,
+    unit_organisasi     String,
+    parent_id           BIGINT,
+    grade_id            BIGINT,
+    grade_name          String,
+    nama_jabatan        String,
+    position_type_id    BIGINT,
+    jenis_jabatan       String,
+	is_deleted          UInt8 -- auto filled by Risingwave when deletion happens
+) ENGINE = ReplacingMergeTree(is_deleted)
+ORDER BY (attendance_id);
+-- use MergeTree() engine for append only
+-- use ReplacingMergeTree() for upsert
+```
+
+- You can also run this by default on docker compose 
