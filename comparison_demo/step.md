@@ -148,8 +148,8 @@ psql -h localhost -p 4566 -d dev -U root
 CREATE MATERIALIZED VIEW attendance_fact AS
 SELECT 
     a.id AS attendance_id, 
-    a.check_in, 
-    a.check_out,
+    CAST(a.check_in AS TIMESTAMP) AS check_in,
+    CAST(a.check_out AS TIMESTAMP) AS check_out,
     a.company_id,
     ss.id AS schedule_id,
     ss.schedule_date,
@@ -196,7 +196,7 @@ WITH (
   "clickhouse.table" = 'attendance_fact',
   "clickhouse.user" = 'default',
   "clickhouse.password" = 'admin',
-  "primary_key" = 'id',
+  "primary_key" = 'attendance_id',
   "clickhouse.delete.column" = 'is_deleted'
 );
 
@@ -204,6 +204,7 @@ WITH (
 ```
 - you can done all the above command by creating a init sql file to be run
   when starting a container
+psql -h 127.0.0.1 -p 4566 -U root -d dev -f ./init_risingwave.sql
 
 # CLICKHOUSE
 

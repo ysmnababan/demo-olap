@@ -62,8 +62,6 @@ services:
       RW_LOG_FILTER: "info,executor=warn"
       # If you're using ClickHouse upsert sink or schema registry, might need premium license
       # RW_LICENSE_KEY: <your-license-key>
-    volumes:
-      - ./init_risingwave.sql:/docker-entrypoint-initdb.d/init_risingwave.sql
     healthcheck:
       test: ["CMD", "risingwave-ctl", "health", "meta"]
       interval: 5s

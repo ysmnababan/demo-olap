@@ -260,19 +260,19 @@ FORMAT PLAIN ENCODE JSON;
 CREATE MATERIALIZED VIEW attendance_fact AS
 SELECT 
     a.id AS attendance_id, 
-    a.check_in, 
-    a.check_out,
+    EXTRACT(EPOCH FROM a.check_in)::BIGINT AS check_in_epoch,
+    EXTRACT(EPOCH FROM a.check_out)::BIGINT AS check_out_epoch,
     a.company_id,
     ss.id AS schedule_id,
-    ss.schedule_date,
-    ss.clock_in_time,
-    ss.clock_out_time,
+    EXTRACT(EPOCH FROM ss.schedule_date)::BIGINT AS schedule_date_epoch,
+    EXTRACT(EPOCH FROM ss.clock_in_time)::INT AS clock_in_time_sec,
+    EXTRACT(EPOCH FROM ss.clock_out_time)::INT AS clock_out_time_sec,
     sr.id AS shift_rule_id,
     sr.name AS shift_rule_name,
     sr.location_address,
     sr.location_name,
-    sr.clock_in_time AS sr_cit,
-    sr.clock_out_time AS sr_cot,
+    EXTRACT(EPOCH FROM sr.clock_in_time)::INT  AS sr_cit_sec,
+    EXTRACT(EPOCH FROM sr.clock_out_time)::INT AS sr_cot_sec,
     u.id AS user_id,
     u.nip,
     u.fullname,
@@ -296,7 +296,7 @@ LEFT JOIN master_position_source mp ON mp.id = up.position_id
 LEFT JOIN master_position_type_source mpt ON mpt.id = mp.position_type_id;
 
 
--- CREATE SINK FOR CLICKHOUSE
+-- -- CREATE SINK FOR CLICKHOUSE
 CREATE SINK sink_attendance_fact
 FROM attendance_fact
 WITH (
@@ -307,6 +307,6 @@ WITH (
     "clickhouse.table" = 'attendance_fact',
     "clickhouse.user" = 'default',
     "clickhouse.password" = 'admin',
-    "primary_key" = 'id',
+    "primary_key" = 'attendance_id',
     "clickhouse.delete.column" = 'is_deleted'
 );
