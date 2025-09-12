@@ -24,7 +24,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Shift Schedule
 CREATE TABLE shift_schedule_source (
@@ -51,7 +51,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Shift Rules
 CREATE TABLE shift_rules_source (
@@ -91,7 +91,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Users
 CREATE TABLE users_source (
@@ -125,7 +125,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Master Unit Organization
 CREATE TABLE master_unit_organization_source (
@@ -146,7 +146,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- User Grade
 CREATE TABLE user_grade_source (
@@ -168,7 +168,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Master Grade
 CREATE TABLE master_grade_source (
@@ -190,7 +190,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- User Position
 CREATE TABLE user_position_source (
@@ -212,7 +212,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Master Position
 CREATE TABLE master_position_source (
@@ -233,7 +233,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 -- Master Position Type
 CREATE TABLE master_position_type_source (
@@ -253,7 +253,7 @@ WITH (
     properties.bootstrap.server = 'redpanda:29092',
     scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 
 
 -- CREATE MATERIALIZED VIEW

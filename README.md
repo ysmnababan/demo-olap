@@ -36,7 +36,7 @@ WITH (
   properties.bootstrap.server = 'redpanda:29092',
   scan.startup.mode = 'earliest'
 )
-FORMAT PLAIN ENCODE JSON;
+FORMAT DEBEZIUM ENCODE JSON;
 ```
 
 ---

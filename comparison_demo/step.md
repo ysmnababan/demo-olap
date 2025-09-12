@@ -129,7 +129,7 @@ curl -X POST http://localhost:8083/connectors/postgres-connector/restart
 - check the topic list
 docker exec -it redpanda rpk topic list
 - consume topic
-docker exec -it redpanda rpk topic consume dbserver1.public.attendances
+docker exec -it redpanda rpk topic consume dbserver1.public.attendances -n 5
 
 # RISINGWAVE
 - connect to risingwave using psql and run the `source.sql`. This is
@@ -200,12 +200,13 @@ WITH (
   "clickhouse.delete.column" = 'is_deleted'
 );
 
-
 ```
 - you can done all the above command by creating a init sql file to be run
   when starting a container
-psql -h 127.0.0.1 -p 4566 -U root -d dev -f ./init_risingwave.sql
 
+```sh
+psql -h 127.0.0.1 -p 4566 -U root -d dev -f ./init_risingwave.sql
+```
 # CLICKHOUSE
 
 - ClickHouse is append-only by design. It doesn’t handle row-level deletes directly in real time. That’s why RisingWave’s sink connector needs a workaround:
@@ -228,30 +229,30 @@ Then create the table:
 -- In ClickHouse
 CREATE TABLE IF NOT EXISTS attendance_fact (
     attendance_id       BIGINT,
-    check_in            DateTime,
-    check_out           DateTime,
+    check_in_epoch      BIGINT,
+    check_out_epoch     Nullable(BIGINT),
     company_id          BIGINT,
     schedule_id         BIGINT,
-    schedule_date       Date,
-    clock_in_time       String,
-    clock_out_time      String,
+    schedule_date_epoch BIGINT,
+    clock_in_time_sec   Nullable(Int32),
+    clock_out_time_sec  Nullable(Int32),
     shift_rule_id       BIGINT,
-    shift_rule_name     String,
-    location_address    String,
-    location_name       String,
-    sr_cit              String,
-    sr_cot              String,
+    shift_rule_name     Nullable(String),
+    location_address    Nullable(String),
+    location_name       Nullable(String),
+    sr_cit_sec          Nullable(Int32),
+    sr_cot_sec          Nullable(Int32),
     user_id             BIGINT,
-    nip                 String,
-    fullname            String,
-    unor_id             BIGINT,
-    unit_organisasi     String,
-    parent_id           BIGINT,
-    grade_id            BIGINT,
-    grade_name          String,
-    nama_jabatan        String,
-    position_type_id    BIGINT,
-    jenis_jabatan       String,
+    nip                 Nullable(String),
+    fullname            Nullable(String),
+    unor_id             Nullable(Int32),
+    unit_organisasi     Nullable(String),
+    parent_id           Nullable(BIGINT),
+    grade_id            Nullable(BIGINT),
+    grade_name          Nullable(String),
+    nama_jabatan        Nullable(String),
+    position_type_id    Nullable(Int32),
+    jenis_jabatan       Nullable(String),
 	is_deleted          UInt8 -- auto filled by Risingwave when deletion happens
 ) ENGINE = ReplacingMergeTree(is_deleted)
 ORDER BY (attendance_id);
