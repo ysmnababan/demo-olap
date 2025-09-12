@@ -41,9 +41,11 @@ select
 	a.check_in , 
 	a.check_out,
 	a.company_id,
+	ss.id as schedule_id,
 	ss.schedule_date ,
 	ss.clock_in_time ,
 	ss.clock_out_time ,
+	sr.id as shift_rule_id,
 	sr."name" as shift_rule_name,
 	sr.location_address ,
 	sr.location_name,
@@ -52,10 +54,13 @@ select
 	u.id as user_id,
 	u.nip ,
 	u.fullname,
+	muo.id as unor_id,
 	muo.unit_organisasi ,
 	muo.parent_id ,
+	mg.id as grade_id,
 	mg."name" as grade_name,
 	mp.nama_jabatan,
+	mpt.id as position_type_id,
 	mpt.jenis_jabatan 
 from 
 	attendances a 
@@ -67,8 +72,7 @@ left join user_grade ug on ug.user_id =u.id
 left join master_grade mg on mg.id = ug.grade_id
 left join user_position up on up.user_id =u.id 
 left join master_position mp on mp.id =up.position_id
-left join master_position_type mpt on mpt.id = mp.position_type_id 
-where mpt.jenis_jabatan is null;
+left join master_position_type mpt on mpt.id = mp.position_type_id ;
 ```
 ## check user privileges
 required privilege for `DEBEZIUM`:
@@ -127,3 +131,52 @@ docker exec -it redpanda rpk topic list
 - consume topic
 docker exec -it redpanda rpk topic consume dbserver1.public.attendances
 
+# RISINGWAVE
+- connect to risingwave using psql and run the `source.sql`. This is
+  for creating the source table. Maybe do don't need to do this manually
+  if you already run it on the docker compose
+```sh
+psql -h 127.0.0.1 -p 4566 -U root -d dev -f sources.sql
+```
+- generaly, `not null` field is only for the primary key field.
+
+- create materialized view 
+```sql
+CREATE MATERIALIZED VIEW attendance_fact AS
+SELECT 
+    a.id AS attendance_id, 
+    a.check_in, 
+    a.check_out,
+    a.company_id,
+    ss.id AS schedule_id,
+    ss.schedule_date,
+    ss.clock_in_time,
+    ss.clock_out_time,
+    sr.id AS shift_rule_id,
+    sr.name AS shift_rule_name,
+    sr.location_address,
+    sr.location_name,
+    sr.clock_in_time AS sr_cit,
+    sr.clock_out_time AS sr_cot,
+    u.id AS user_id,
+    u.nip,
+    u.fullname,
+    muo.id AS unor_id,
+    muo.unit_organisasi,
+    muo.parent_id,
+    mg.id AS grade_id,
+    mg.name AS grade_name,
+    mp.nama_jabatan,
+    mpt.id AS position_type_id,
+    mpt.jenis_jabatan
+FROM attendances_source a
+JOIN shift_schedule_source ss ON ss.id = a.shift_schedule_id
+JOIN shift_rules_source sr ON sr.id = ss.shift_rule_id
+JOIN users_source u ON a.user_id = u.id
+JOIN master_unit_organization_source muo ON muo.id = u.unor_id
+LEFT JOIN user_grade_source ug ON ug.user_id = u.id
+LEFT JOIN master_grade_source mg ON mg.id = ug.grade_id
+LEFT JOIN user_position_source up ON up.user_id = u.id
+LEFT JOIN master_position_source mp ON mp.id = up.position_id
+LEFT JOIN master_position_type_source mpt ON mpt.id = mp.position_type_id;
+```
