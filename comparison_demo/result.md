@@ -2,24 +2,28 @@
 
 ## With Debezium
 
-<!-- while idle -->
+<!-- after compose up -->
+18:28
 docker stats --no-stream
 CONTAINER ID   NAME            CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O   PIDS
-abd507df1186   kafka-connect   1.03%     1.532GiB / 15.49GiB   9.89%     46.6MB / 178MB    0B / 0B     59
-2968966fa34d   risingwave      7.70%     946.3MiB / 15.49GiB   5.97%     135MB / 9.52MB    0B / 0B     160
-149fcdc96c93   clickhouse      5.62%     767.4MiB / 15.49GiB   4.84%     1.34MB / 1.03MB   0B / 0B     709
-fb20c7a8edb9   redpanda        1.95%     459.3MiB / 15.49GiB   2.90%     186MB / 139MB     0B / 0B     3
-4b153121f820   malut_clone     0.01%     91.05MiB / 15.49GiB   0.57%     7.17MB / 489MB    0B / 0B     11
+1208a662d55e   kafka-connect   4.60%     503.8MiB / 15.49GiB   3.18%     85.3kB / 70.8kB   0B / 0B     53
+21da0709ff28   risingwave      3.84%     175MiB / 15.49GiB     1.10%     34.7kB / 11.7kB   0B / 0B     82
+2b608cd2779e   clickhouse      12.58%    479.1MiB / 15.49GiB   3.02%     6.88kB / 4.69kB   0B / 0B     686
+99769f09fa39   redpanda        1.41%     288.9MiB / 15.49GiB   1.82%     72.8kB / 83.5kB   0B / 0B     3
+4b153121f820   malut_clone     0.01%     162MiB / 15.49GiB     1.02%     14.3MB / 647MB    0B / 0B     10
+
+<!-- after sending debeziumconfig -->
+18:29:30
 
 
-docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}"
-NAME            MEM USAGE / LIMIT
-kafka-connect   1.533GiB / 15.49GiB
-risingwave      953.7MiB / 15.49GiB
-clickhouse      782.5MiB / 15.49GiB
-redpanda        459.3MiB / 15.49GiB
-malut_clone     91.05MiB / 15.49GiB
+<!-- after init the risingwave -->
+18:31:00
 
+<!-- after dumping 1k data -->
+18:38:30
+1066031->2066031
 
-concern
-- rising wave nambah terus memory 1.2gb -> 5gb
+result:
+- rising wave nambah terus memory 0.4gb -> 7gb
+- kafka : 300mb =>2100mb
+- redpanda: 270mb =>700mb
