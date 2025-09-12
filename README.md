@@ -26,18 +26,17 @@ docker run --rm -it --network clickhouse_demo_default \
 Make sure to include the key for Debezium support:
 
 ```sql
-CREATE TABLE test_table_source (
+CREATE TABLE IF NOT EXISTS test_table_source (
   id INT PRIMARY KEY,
   name TEXT
 )
-INCLUDE KEY AS id
 WITH (
   connector = 'kafka',
   topic = 'dbserver1.public.test_table',
   properties.bootstrap.server = 'redpanda:29092',
   scan.startup.mode = 'earliest'
 )
-FORMAT DEBEZIUM ENCODE JSON;
+FORMAT PLAIN ENCODE JSON;
 ```
 
 ---
