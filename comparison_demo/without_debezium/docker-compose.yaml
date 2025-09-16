@@ -1,0 +1,32 @@
+services:
+  risingwave:
+    image: risingwavelabs/risingwave:v2.5.0
+    container_name: risingwave
+    depends_on:
+      - clickhouse
+    ports:
+      - "4566:4566"    # PostgreSQL‑wire interface (CLI / Grafana, etc.)
+      - "5691:5691"    # REST/gRPC
+    environment:
+      # Optional tuning flags
+      RW_LOG_FILTER: "info,executor=warn"
+      # If you're using ClickHouse upsert sink or schema registry, might need premium license
+      # RW_LICENSE_KEY: <your-license-key>
+    healthcheck:
+      test: ["CMD", "risingwave-ctl", "health", "meta"]
+      interval: 5s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP (used by RW clickhouse sink)
+      - "9000:9000"  # Native client
+    volumes:
+      - ./init_clickhouse.sql:/docker-entrypoint-initdb.d/init_clickhouse.sql
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=admin
+volumes:
+  clickhouse_data:
