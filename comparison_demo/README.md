@@ -71,10 +71,29 @@ The focus is on measuring **memory usage** under different insertion loads using
 ## Observations
 
 * Both architectures successfully handled **1M row insertion**.
-* Memory usage patterns differed:
+* Memory usage patterns differed significantly:
 
-  * \[Highlight key differences, e.g., Debezium + Redpanda adds overhead due to streaming layer.]
-  * \[Direct approach showed lower container count but higher memory spikes, etc.]
+### Debezium + Redpanda (CDC Streaming)
+
+* **Debezium & Redpanda** stayed relatively stable (small increases or even decreases in some runs).
+* **RisingWave** showed the **largest memory growth** (from \~4 GB → \~5.3 GB for 500k, and \~186 MB → \~6.9 GB for 1M).
+* **ClickHouse** usage fluctuated slightly but remained under 1 GB.
+
+### Direct Approach
+
+* **RisingWave** again consumed the most memory, with large spikes:
+
+  * 500k: \~487 MB → \~5.0 GB
+  * 1M: \~487 MB → \~6.0 GB
+* **ClickHouse** memory remained moderate (\~650–720 MB).
+* No extra overhead from Debezium/Redpanda since they were not in the flow.
+
+**Key Takeaway:**
+
+* Adding Debezium + Redpanda introduces extra components but did not dominate memory consumption — RisingWave was the main memory consumer in both setups.
+* The **Direct Approach** uses fewer containers, but RisingWave still spikes heavily under large insertions.
+* CDC streaming setup offers more flexibility for downstream consumers at the cost of extra system complexity, but memory behavior was broadly comparable.
+
 
 ---
 
